@@ -1,5 +1,13 @@
 # Bag of Tricks and A Strong ReID Baseline
 
+## Namgyu's Findings
+
+- Image order is not stable (it's dependent on glob.glob). I presume that other
+  works will be similar, so just use the image id outputted from the project-specific
+  data loaders.
+
+-end
+
 Bag of Tricks and A Strong Baseline for Deep Person Re-identification. CVPRW2019, Oral.
 
 A Strong Baseline and Batch Normalization Neck for Deep Person Re-identification. IEEE Transactions on Multimedia (Accepted).

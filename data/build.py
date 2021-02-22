@@ -37,6 +37,15 @@ def make_data_loader(cfg):
             num_workers=num_workers, collate_fn=train_collate_fn
         )
 
+    # NAMGYU
+    # Export val data for details
+    data = dataset.query + dataset.gallery
+    path = "/home/itsnamgyu/Desktop/reid_strong_baseline_val_data.txt"
+    with open(path, "w") as f:
+        import json
+        json.dump(data, f, indent=4)
+    print("Val data details outputted to {}".format(path))
+
     val_set = ImageDataset(dataset.query + dataset.gallery, val_transforms)
     val_loader = DataLoader(
         val_set, batch_size=cfg.TEST.IMS_PER_BATCH, shuffle=False, num_workers=num_workers,

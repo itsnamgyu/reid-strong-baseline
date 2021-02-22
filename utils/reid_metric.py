@@ -4,6 +4,8 @@
 @contact: sherlockliao01@gmail.com
 """
 
+import os
+import json
 import numpy as np
 import torch
 from ignite.metrics import Metric
@@ -43,12 +45,39 @@ class R1_mAP(Metric):
         gf = feats[self.num_query:]
         g_pids = np.asarray(self.pids[self.num_query:])
         g_camids = np.asarray(self.camids[self.num_query:])
+
+        # NAMGYU
+        print("Saving output features and dataset metadata")
+        os.makedirs("outputs", exist_ok=True)
+        np.save("outputs/qf.npy", qf.cpu().numpy())
+        np.save("outputs/gf.npy", gf.cpu().numpy())
+        with open("outputs/other.json", "w") as f:
+            other = {
+                "q_pids": q_pids.tolist(),
+                "g_pids": g_pids.tolist(),
+                "q_camids": q_camids.tolist(),
+                "g_camids": g_camids.tolist(),
+            }
+            json.dump(other, f)
+
+        gf = gf.cpu()
+        qf = qf.cpu()
+
         m, n = qf.shape[0], gf.shape[0]
         distmat = torch.pow(qf, 2).sum(dim=1, keepdim=True).expand(m, n) + \
                   torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
         distmat.addmm_(1, -2, qf, gf.t())
         distmat = distmat.cpu().numpy()
+
+        # NAMGYU
+        print("Saving distmat")
+        np.save("outputs/distmat.npy", distmat)
+
+        # NAMGYU
+        print("Evaluating...")
         cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+        print("Evaluation complete")
+
 
         return cmc, mAP
 
@@ -90,8 +119,34 @@ class R1_mAP_reranking(Metric):
         #           torch.pow(gf, 2).sum(dim=1, keepdim=True).expand(n, m).t()
         # distmat.addmm_(1, -2, qf, gf.t())
         # distmat = distmat.cpu().numpy()
+
+        # NAMGYU
+        print("Saving output features and dataset metadata")
+        os.makedirs("outputs", exist_ok=True)
+        np.save("outputs/qf.npy", qf.cpu().numpy())
+        np.save("outputs/gf.npy", gf.cpu().numpy())
+        with open("outputs/other.json", "w") as f:
+            other = {
+                "q_pids": q_pids.tolist(),
+                "g_pids": g_pids.tolist(),
+                "q_camids": q_camids.tolist(),
+                "g_camids": g_camids.tolist(),
+            }
+            json.dump(other, f)
+
+        gf = gf.cpu()
+        qf = qf.cpu()
+
         print("Enter reranking")
         distmat = re_ranking(qf, gf, k1=20, k2=6, lambda_value=0.3)
+
+        # NAMGYU
+        print("Saving distmat")
+        np.save("outputs/distmat.npy", distmat)
+
+        # NAMGYU
+        print("Evaluating...")
         cmc, mAP = eval_func(distmat, q_pids, g_pids, q_camids, g_camids)
+        print("Evaluation complete")
 
         return cmc, mAP
